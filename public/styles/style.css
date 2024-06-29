@@ -1,0 +1,79 @@
+body {
+  font-family: "Figtree", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: 400;
+  font-style: normal;
+  background-color: #F5F4F4;
+  color: #00303F;
+}
+
+header {
+    height: 65px;
+    width: 100%;
+    background-color: #00303F;
+    padding-left: 5%;
+    padding-right: 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+.name {
+    color: #F5F4F4;
+}
+
+.transition {
+  transition: 0.6s;
+}
+
+.gradient-background {
+    background: linear-gradient(318deg,#3ebfe6,#00303f,#32a8cc);
+    background-size: 180% 180%;
+    animation: gradient-animation 9s ease infinite;
+  }
+  
+  @keyframes gradient-animation {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+.undhea {
+  height: 70vh;
+  overflow: hidden;
+  color: #927a5b;
+  display: flex;
+  justify-content:space-around;
+  align-items: center;
+  cursor: default;
+}
+
+h1 {
+  font-weight: bold;
+  font-style: italic;
+  text-decoration: underline;
+  font-size: 72px;
+}
+
+.partners {
+  background-color: #00303F;
+  color: #F5F4F4;
+}
+
+@media(max-width:630px){
+  .slika {
+    display:none;
+  }
+}
