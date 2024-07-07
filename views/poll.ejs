@@ -1,0 +1,81 @@
+<%- include("partials/header.ejs") -%>
+
+
+<% if(vote.length > 0) { %>
+   <h1>You already voted on this poll!</h1>
+   <h1><%= poll[0].name %></h1>
+   <form action="/vote" method="post">
+   <% poll.forEach(option => { %> 
+      <label><%= option.option_text %>
+         <% if(option.id == vote[0].option_id){ %>
+            <input type="radio" name="radio" value="<%= option.id %>" checked disabled>
+         <% } else { %>
+            <input type="radio" name="radio" value="<%= option.id %>" disabled>
+         <% } %>
+         <span class="checkox"></span>
+      </label>
+   <% }); %>
+   <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
+   <input type="submit" disabled>
+   </form>
+<% 
+   const option1Id = options[0].id;
+   const option2Id = options[1].id;
+   let option1Count = 0;
+   let option2Count = 0;
+   allVotes.forEach(vote => {
+   if(vote.option_id == option1Id){
+      option1Count++;
+   } else {
+      option2Count++;
+   }});
+   %> 
+   <input type="hidden" id="option1" name="option1" value="<%= option1Count %>">
+   <input type="hidden" id="option2" name="option2" value="<%= option2Count %>">
+   <input type="hidden" id="option1text" name="option1text" value="<%= options[0].option_text %>">
+   <input type="hidden" id="option2text" name="option2text" value="<%= options[1].option_text %>">
+   <div style="height: 50vh; width: 30%; margin:10px auto;">
+      <canvas id="pie"></canvas>
+    </div>
+<% } 
+else {%>
+   <h1><%= poll[0].name %></h1>
+   <form action="/vote" method="post">
+   <% poll.forEach(option => { %> 
+      <label><%= option.option_text %>
+         <input type="radio" name="radio" value="<%= option.id %>">
+         <span class="checkox"></span>
+      </label>
+   <% }); %>
+   <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
+   <input type="submit">
+   </form>
+<% } %>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+   const option1 =  document.getElementById('option1').value;
+   const option2 = document.getElementById('option2').value;
+   const option1text = document.getElementById('option1text').value;
+   const option2text = document.getElementById('option2text').value;
+   const data = [option1, option2];
+   const ctx = document.getElementById('pie');
+
+   new Chart(ctx, {
+   type: 'pie',
+   data: {
+      labels: [option1text, option2text],
+      datasets: [{
+         data: data,
+      }]
+   },
+   options: {
+      plugins: {
+         title: {
+            display: true,
+            text: 'Poll results'
+         }
+      }
+   }
+   });
+</script>
+<%- include("partials/footer.ejs") -%>

@@ -6,6 +6,7 @@ import bcrypt from "bcrypt";
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy } from 'passport-local';
+import queryString from 'query-string';
 
 const app = express();
 const port = 3000;
@@ -73,15 +74,50 @@ app.get("/home", async (req, res) => {
     console.log(req.user);
     const user = req.user;
     if(req.isAuthenticated()){
-        const info = await db.query("SELECT * FROM polls JOIN options ON polls.id = options.poll_id;");
+        const polls = await db.query("SELECT * FROM polls;");
+        const options = await db.query("SELECT * FROM options;");
         const voted = await db.query("SELECT * FROM votes WHERE user_id = $1", [user.id,]);
-        console.log(voted.rows);
-        console.log(info.rows);
-        res.render("index.ejs", {user: user, info: info.rows, votes: voted.rows});
+        res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: voted.rows});
     } else {
         res.redirect("/login");
     }
 });
+
+app.get("/make-poll", (req,res) => {
+    if(req.isAuthenticated()){
+        const user = req.user;
+        if(user.is_admin){
+            console.log(user);
+            res.render("newpoll.ejs", {user: user});
+            
+        }
+        else {
+            res.redirect("/home");
+        }
+    } else {
+        res.redirect("/login");
+    }
+});
+
+app.get("/poll", async (req,res) => {
+    if(req.isAuthenticated()){
+        const user = req.user;
+        const poll_id = req.originalUrl.slice(9);
+        try {
+            const poll = await db.query("SELECT * FROM polls JOIN options ON polls.id = options.poll_id WHERE polls.id = $1", [poll_id]);
+            const vote = await db.query("SELECT * FROM votes WHERE poll_id=$1 AND user_id=$2", [poll_id, user.id]); 
+            const allVotes = await db.query("SELECT * FROM votes WHERE poll_id=$1", [poll_id]);
+            const options = await db.query("SELECT * FROM options WHERE poll_id=$1", [poll_id]);
+            res.render("poll.ejs", {user: user, poll: poll.rows, vote: vote.rows, allVotes: allVotes.rows, options: options.rows});
+        } catch (error) {
+            console.log(error);
+            res.redirect("/home");
+        }   
+        
+    } else {
+        res.redirect("/login")
+    }
+})
 
 app.post("/register", async (req,res) => {
     const username = req.body.username;
@@ -120,6 +156,60 @@ app.post("/login",
         successRedirect: "/home",
         failureRedirect: "/login-fail" 
     }));
+
+app.post('/logout', function(req, res, next){
+    req.logout(function(err) {
+        if (err) { return next(err); }
+        res.redirect('/login');
+    });
+});
+
+app.post("/make-poll", async (req,res) => {
+    if(req.isAuthenticated()){
+        const pollName = req.body["name"];
+        const user = req.user;
+        try {
+            const result = await db.query("INSERT INTO polls (name, creator_id) VALUES($1, $2) RETURNING *;", [pollName,user.id]);
+            console.log(result.rows[0]);
+            const pollId = result.rows[0].id;
+            const option1 = req.body["option1"];
+            const option2 = req.body["option2"];
+            try {
+                const result1 = await db.query("INSERT INTO options (poll_id, option_text) VALUES($1, $2);", [pollId, option1])
+                const result2 = await db.query("INSERT INTO options (poll_id, option_text) VALUES($1, $2);", [pollId, option2])
+                res.redirect("/home");
+            } catch (error) {
+                console.log(error + "while inserting values in options");
+                res.render("newpoll.ejs", {user:user, error:"Unpredictable unhandled error, try again"})
+            }
+        } catch(error) {
+            console.log(error);
+            res.render("newpoll.ejs", {user: user, error: "Poll with same name already exists! Try another name!"})
+        }
+        }
+    else{
+        res.redirect("/home");
+    }
+    
+});
+
+app.post("/vote", async (req, res) => {
+    const optionId = req.body["radio"];
+    const pollId = req.body["pollId"];
+    const user = req.user;
+    try {
+        const result = await db.query("INSERT INTO votes (poll_id, option_id, user_id) VALUES($1, $2, $3);", [pollId, optionId, user.id]);
+        res.redirect(`/poll?id=${pollId}`);
+    } catch (error) {
+        if(error.constraint == 'unique_poll_user'){
+            console.log("User already voted on this poll");
+            res.redirect("/home");
+        } else {
+            console.log(error);
+            res.redirect("/home");
+        }
+    }
+});
 
 passport.use(new Strategy(async function verify(username, password, cb) {
     try {
