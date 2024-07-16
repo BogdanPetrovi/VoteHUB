@@ -6,6 +6,10 @@ body {
   background-color: #F5F4F4;
   /* za bck color F5F4F4 */
   color: #00303F;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content:space-between;
 }
 
 header {
@@ -72,6 +76,13 @@ h1 {
   background-color: #00303F;
   color: #F5F4F4;
 }
+
+.hidden {
+  display: none;
+}
+
+
+
 
 @media(max-width:630px){
   .slika {

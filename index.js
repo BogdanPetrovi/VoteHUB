@@ -6,7 +6,6 @@ import bcrypt from "bcrypt";
 import session from 'express-session';
 import passport from 'passport';
 import { Strategy } from 'passport-local';
-import queryString from 'query-string';
 
 const app = express();
 const port = 3000;
@@ -74,10 +73,10 @@ app.get("/home", async (req, res) => {
     console.log(req.user);
     const user = req.user;
     if(req.isAuthenticated()){
-        const polls = await db.query("SELECT * FROM polls;");
-        const options = await db.query("SELECT * FROM options;");
-        const voted = await db.query("SELECT * FROM votes WHERE user_id = $1", [user.id,]);
-        res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: voted.rows});
+        const polls = await db.query("SELECT * FROM users JOIN polls ON polls.creator_id = users.id ORDER BY polls.id DESC");
+        const options = await db.query("SELECT * FROM options");
+        const votes = await db.query("SELECT * FROM votes WHERE user_id = $1", [user.id]);
+        res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: votes.rows});
     } else {
         res.redirect("/login");
     }
@@ -89,7 +88,6 @@ app.get("/make-poll", (req,res) => {
         if(user.is_admin){
             console.log(user);
             res.render("newpoll.ejs", {user: user});
-            
         }
         else {
             res.redirect("/home");
@@ -99,23 +97,57 @@ app.get("/make-poll", (req,res) => {
     }
 });
 
-app.get("/poll", async (req,res) => {
+app.get("/poll/:id", async (req,res) => {
     if(req.isAuthenticated()){
         const user = req.user;
-        const poll_id = req.originalUrl.slice(9);
+        const poll_id = req.params.id;
         try {
             const poll = await db.query("SELECT * FROM polls JOIN options ON polls.id = options.poll_id WHERE polls.id = $1", [poll_id]);
+            const creator = await db.query("SELECT * FROM users WHERE id=$1", [poll.rows[0].creator_id]);
             const vote = await db.query("SELECT * FROM votes WHERE poll_id=$1 AND user_id=$2", [poll_id, user.id]); 
             const allVotes = await db.query("SELECT * FROM votes WHERE poll_id=$1", [poll_id]);
             const options = await db.query("SELECT * FROM options WHERE poll_id=$1", [poll_id]);
-            res.render("poll.ejs", {user: user, poll: poll.rows, vote: vote.rows, allVotes: allVotes.rows, options: options.rows});
+            res.render("poll.ejs", {user: user, poll: poll.rows, vote: vote.rows, allVotes: allVotes.rows, options: options.rows, creator: creator.rows});
         } catch (error) {
             console.log(error);
             res.redirect("/home");
         }   
-        
     } else {
         res.redirect("/login")
+    }
+});
+
+app.get("/profile/:id", async (req, res) => {
+    if(req.isAuthenticated()){
+        const user = req.user;
+        const userProfileId = req.params.id;
+        try {
+            const profile = await db.query("SELECT * FROM users WHERE id=$1", [userProfileId]);
+            if(profile.rows.length > 0){
+                const votes = await db.query("SELECT * FROM votes WHERE user_id=$1 ORDER BY id DESC LIMIT 10 ;", [userProfileId]);
+                if(votes.rows.length > 0){
+                    try {
+                        const polls = await db.query("SELECT * FROM votes JOIN polls ON polls.id = votes.poll_id JOIN options ON votes.option_id = options.id WHERE votes.user_id = $1 ORDER BY votes.id DESC LIMIT 10;", [userProfileId]);
+                        if(profile.rows[0].is_admin){
+                            const created = await db.query("SELECT * FROM polls WHERE creator_id = $1", [userProfileId]);
+                            res.render("profile.ejs", {user: user, profile:profile.rows, votes:votes.rows, polls:polls.rows, created: created.rows});
+                        } else {
+                            res.render("profile.ejs", {user: user, profile:profile.rows, votes:votes.rows, polls:polls.rows});
+                        }
+                    } catch (error) {
+                        console.log(error);
+                        res.redirect("/home");
+                    }
+                }
+            } else {
+                res.render("profile.ejs", {user: user, error: "Profile not found"});
+            }
+        } catch (error) {
+            console.log(error);
+            res.send("Unknown error");
+        }
+    } else{
+        res.redirect("/login");
     }
 })
 
@@ -177,7 +209,7 @@ app.post("/make-poll", async (req,res) => {
             try {
                 const result1 = await db.query("INSERT INTO options (poll_id, option_text) VALUES($1, $2);", [pollId, option1])
                 const result2 = await db.query("INSERT INTO options (poll_id, option_text) VALUES($1, $2);", [pollId, option2])
-                res.redirect("/home");
+                res.redirect(`/poll/${pollId}`);
             } catch (error) {
                 console.log(error + "while inserting values in options");
                 res.render("newpoll.ejs", {user:user, error:"Unpredictable unhandled error, try again"})
@@ -199,7 +231,7 @@ app.post("/vote", async (req, res) => {
     const user = req.user;
     try {
         const result = await db.query("INSERT INTO votes (poll_id, option_id, user_id) VALUES($1, $2, $3);", [pollId, optionId, user.id]);
-        res.redirect(`/poll?id=${pollId}`);
+        res.redirect(`/poll/${pollId}`);
     } catch (error) {
         if(error.constraint == 'unique_poll_user'){
             console.log("User already voted on this poll");

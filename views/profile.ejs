@@ -1,0 +1,53 @@
+<%- include("partials/header.ejs") -%>
+
+<% if(locals.profile) { %>
+    <h1><%= profile[0].username %></h1>
+    <h1><%= profile[0].email %></h1>
+    <h1><%= profile[0].is_admin %></h1>
+
+
+    <% if(locals.created){ %>
+        <button id="votes">Votes</button>
+        <button id="created">Created polls</button>
+    <% } %>
+
+
+    <div id="polls">
+        <% if(locals.polls){ 
+            polls.forEach(poll => { %>
+                <div class="poll">
+                    <h3><%= poll.name %></h3>
+                    <h3><%= poll.option_text %></h3>
+                    <a href="/poll/<%= poll.poll_id %>"><h3>See more</h3></a>
+                </div>
+        <%  });
+        } else { %>
+            <h1>still no votes</h1>
+        <% } %>
+    </div>
+
+    <% if(locals.created){ %>
+        <div id="createdPolls" class="hidden">
+        <% created.forEach(poll => { %>
+            <div class="poll">
+                <h3><%= poll.name %></h3>
+                <a href="/poll/<%= poll.id %>"><h3>See more</h3></a>
+            </div>
+        <% }); %>
+        </div>
+
+        <script>
+            document.getElementById('votes').onclick = function() {
+                document.getElementById('createdPolls').setAttribute('class', 'hidden');
+                document.getElementById('polls').removeAttribute('class', 'hidden');
+            };   
+            document.getElementById('created').onclick = function() {
+                document.getElementById('polls').setAttribute('class', 'hidden');
+                document.getElementById('createdPolls').removeAttribute('class', 'hidden');
+            };  
+            
+        </script>
+<% }} else { %>
+<h1><%= error %></h1>
+<% } %>
+<%- include("partials/footer.ejs") -%>

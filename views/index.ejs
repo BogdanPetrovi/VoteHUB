@@ -1,15 +1,214 @@
 <%- include('partials/header.ejs') -%>
 
-    <% 
-    polls.forEach(poll => { %>
-        <h1><%= poll.name %></h1> 
-        <% options.forEach(option => {
-            if(option.poll_id == poll.id){
-                %>
-                <p><%= option.option_text %></p>
-                <%
+  <div>
+    <div class="dropdown">
+      <a class="btn btn-secondary me-2 dropdown-toggle" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-sort-up" viewBox="0 0 16 16">
+            <path d="M3.5 12.5a.5.5 0 0 1-1 0V3.707L1.354 4.854a.5.5 0 1 1-.708-.708l2-1.999.007-.007a.5.5 0 0 1 .7.006l2 2a.5.5 0 1 1-.707.708L3.5 3.707zm3.5-9a.5.5 0 0 1 .5-.5h7a.5.5 0 0 1 0 1h-7a.5.5 0 0 1-.5-.5M7.5 6a.5.5 0 0 0 0 1h5a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h3a.5.5 0 0 0 0-1zm0 3a.5.5 0 0 0 0 1h1a.5.5 0 0 0 0-1z"></path>
+        </svg> Sort by
+        </a>
+      <ul class="dropdown-menu">
+        <li><a class="dropdown-item" id="oldest">Oldest first</a></li>
+        <li><a class="dropdown-item" id="newest">Newest first</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="btn-group" role="group" aria-label="Basic example">
+    <button type="button" class="btn btn-secondary" id="all">All</button>
+    <button type="button" class="btn btn-secondary" id="noVote">Not Voted</button>
+    <button type="button" class="btn btn-secondary" id="vote">Voted</button>
+  </div>
+
+  <div class="polls" id="normal">
+    <% polls.forEach(poll => { 
+      has_voted = 0; 
+      options.forEach(option => {
+        if(option.poll_id == poll.id){ 
+          votes.forEach(vote => {
+            if(vote.poll_id == option.poll_id){
+              has_voted = 1;
             }
-        });
-        %> <a href="/poll?id=<%= poll.id %>">See more</a> <%
+          });
+        }
+      });
+      if(has_voted){ %>
+        <div class="voted">
+          <h4><%= poll.name %></h4>      
+          <h4>@<%= poll.username %></h4>
+          <form action="/vote" method="post">
+            <% options.forEach(option => {
+              if(option.poll_id == poll.id){ 
+                votes.forEach(vote => {
+                  if(vote.poll_id == option.poll_id){
+                    if(vote.option_id == option.id){ %>
+                      <label>
+                        <input type="radio" name="radio" value="<%= option.id %>" disabled checked>
+                        <span class="checkbox"></span>  
+                        <%= option.option_text %>
+                      </label>
+                    <% } else { %>
+                      <label>
+                        <input type="radio" name="radio" value="<%= option.id %>" disabled>
+                        <span class="checkbox"></span>
+                        <%= option.option_text %>  
+                      </label>
+                    <% }
+                  }
+                });
+              }
+            }); %>
+            <input type="hidden" name="pollId" value="<%= poll.id %>">
+            <input type="submit">
+          </form> 
+          <a href="/poll/<%= poll.id %>"><h4>See more</h4></a>
+        </div>                 
+      <% } else { %>
+        <div class="notVoted">
+          <h4><%= poll.name %></h4>      
+          <h4>@<%= poll.username %></h4>
+          <form action="/vote" method="post">
+            <% options.forEach(option => {
+              if(option.poll_id == poll.id){ %>
+                <label>
+                  <input type="radio" name="radio" value="<%= option.id %>">
+                  <span class="checkbox"></span>  
+                  <%= option.option_text %>
+                </label>
+              <% }
+            }); %>
+            <input type="hidden" name="pollId" value="<%= poll.id %>">
+            <input type="submit">
+          </form> 
+          <a href="/poll/<%= poll.id %>"><h4>See more</h4></a>
+        </div>  
+      <% }
+  }); %>  
+  </div>
+
+  <div class="polls hidden" id="reverse">
+    <% 
+      polls.slice().reverse().forEach(poll => { 
+        let has_voted = 0;
+          options.forEach(option => {
+            if(option.poll_id == poll.id){ 
+                votes.forEach(vote => {
+                  if(vote.poll_id == option.poll_id){
+                    has_voted = 1;
+                  } %>
+                  <%
+                })}});
+                if(has_voted){ %>
+                  <div class="voted">
+                    <h4><%= poll.name %></h4>      
+                    <h4>@<%= poll.username %></h4>
+                    <form action="/vote" method="post">
+                        <% 
+                        options.forEach(option => {
+                          if(option.poll_id == poll.id){ 
+                          votes.forEach(vote => {
+                            if(vote.poll_id == option.poll_id){
+                              if(vote.option_id == option.id){ %>
+                                  <label>
+                                    <input type="radio" name="radio" value="<%= option.id %>" disabled checked>
+                                    <span class="checkbox"></span>  
+                                    <%= option.option_text %>
+                                  </label>
+                                <% } else { %>
+                                  <label>
+                                    <input type="radio" name="radio" value="<%= option.id %>" disabled>
+                                    <span class="checkbox"></span>
+                                    <%= option.option_text %>  
+                                  </label>
+                                <% }
+                          }});}}); %>
+                        <input type="hidden" name="pollId" value="<%= poll.id %>">
+                        <input type="submit">
+                      </form> 
+                      <a href="/poll/<%= poll.id %>"><h4>See more</h4></a>
+                    </div>                 
+                <% } else { %>
+                  <div class="notVoted">
+                    <h4><%= poll.name %></h4>      
+                    <h4>@<%= poll.username %></h4>
+                    <form action="/vote" method="post">
+                      <% options.forEach(option => {
+                        if(option.poll_id == poll.id){ 
+                        %>
+                          <label>
+                            <input type="radio" name="radio" value="<%= option.id %>">
+                            <span class="checkbox"></span>  
+                            <%= option.option_text %>
+                          </label>
+                <% }}); %>
+                      <input type="hidden" name="pollId" value="<%= poll.id %>">
+                      <input type="submit">
+                    </form> 
+                    <a href="/poll/<%= poll.id %>"><h4>See more</h4></a>
+                    </div>  
+                <% }
     }); %>
+  </div>
+
+<script>
+  document.getElementById('all').onclick = () => {
+    const votes = document.getElementsByClassName('voted');
+    const noVotes = document.getElementsByClassName('notVoted');
+    Array.from(votes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+    Array.from(noVotes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+  };
+
+  document.getElementById('noVote').onclick = () => {
+    const votes = document.getElementsByClassName('voted');
+    const noVotes = document.getElementsByClassName('notVoted');
+    Array.from(votes).forEach(div => {
+      div.classList.add("hidden");
+    });
+    Array.from(noVotes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+  };
+
+
+  document.getElementById('vote').onclick = () => {
+    const votes = document.getElementsByClassName('voted');
+    const noVotes = document.getElementsByClassName('notVoted');
+    Array.from(votes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+    Array.from(noVotes).forEach(div => {
+      div.classList.add("hidden");
+    });
+  };
+
+  document.getElementById('all').onclick = () => {
+    const votes = document.getElementsByClassName('voted');
+    const noVotes = document.getElementsByClassName('notVoted');
+    Array.from(votes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+    Array.from(noVotes).forEach(div => {
+      div.classList.remove("hidden");
+    });
+  };
+  
+  document.getElementById('oldest').onclick = () => {
+    const normal = document.getElementById('normal');
+    const reverse = document.getElementById('reverse');
+    normal.classList.add('hidden');
+    reverse.classList.remove('hidden');
+  };
+
+  document.getElementById('newest').onclick = () => {
+    const normal = document.getElementById('normal');
+    const reverse = document.getElementById('reverse');
+    normal.classList.remove('hidden');
+    reverse.classList.add('hidden');
+  };
+
+</script>
 <%- include('partials/footer.ejs'); -%>
