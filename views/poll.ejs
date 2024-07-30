@@ -1,58 +1,73 @@
 <%- include("partials/header.ejs") -%>
 
-
 <% if(vote.length > 0) { %>
-   <h1>You already voted on this poll!</h1>
-   <h1>Poll creator <a href="/profile/<%= creator[0].id %>"><%= creator[0].username %></a></h1>
-   <h1><%= poll[0].name %></h1>
-   <form action="/vote" method="post">
-   <% poll.forEach(option => { %> 
-      <label><%= option.option_text %>
-         <% if(option.id == vote[0].option_id){ %>
-            <input type="radio" name="radio" value="<%= option.id %>" checked disabled>
-         <% } else { %>
-            <input type="radio" name="radio" value="<%= option.id %>" disabled>
-         <% } %>
-         <span class="checkox"></span>
-      </label>
-   <% }); %>
-   <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
-   <input type="submit" disabled>
-   </form>
-<% 
-   const option1Id = options[0].id;
-   const option2Id = options[1].id;
-   let option1Count = 0;
-   let option2Count = 0;
-   allVotes.forEach(vote => {
-   if(vote.option_id == option1Id){
-      option1Count++;
-   } else {
-      option2Count++;
-   }});
-   %> 
-   <input type="hidden" id="option1" name="option1" value="<%= option1Count %>">
-   <input type="hidden" id="option2" name="option2" value="<%= option2Count %>">
-   <input type="hidden" id="option1text" name="option1text" value="<%= options[0].option_text %>">
-   <input type="hidden" id="option2text" name="option2text" value="<%= options[1].option_text %>">
-   <div style="height: 50vh; width: 30%; margin:10px auto;">
-      <canvas id="pie"></canvas>
-    </div>
+   <div class="poll-voted">
+      <h2 id="poll-name"><%= poll[0].name %></h2>
+      <form action="/vote" method="post">
+      <% poll.forEach(option => { %> 
+         <label class="radio-btn">
+            <% if(option.id == vote[0].option_id){ %>
+               <input type="radio" name="radio" value="<%= option.id %>" checked disabled>
+               <div class="outside"><div class="inside"></div></div>
+            <% } else { %>
+               <input type="radio" name="radio" value="<%= option.id %>" disabled>
+               <div class="outside"><div class="inside"></div></div>
+            <% } %>
+            <span class="checkox"></span>
+            <h3><%= option.option_text %></h3>
+         </label>
+      <% }); %>
+      <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
+      <div class="submit"><input type="submit" disabled></div>
+      </form>
+   </div>   
+   <% 
+      const option1Id = options[0].id;
+      const option2Id = options[1].id;
+      let option1Count = 0;
+      let option2Count = 0;
+      allVotes.forEach(vote => {
+      if(vote.option_id == option1Id){
+         option1Count++;
+      } else {
+         option2Count++;
+      }});
+      %> 
+      <input type="hidden" id="option1" name="option1" value="<%= option1Count %>">
+      <input type="hidden" id="option2" name="option2" value="<%= option2Count %>">
+      <input type="hidden" id="option1text" name="option1text" value="<%= options[0].option_text %>">
+      <input type="hidden" id="option2text" name="option2text" value="<%= options[1].option_text %>">
+      <div style=" margin:10px auto;">
+         <canvas id="pie"></canvas>
+      </div>
 <% } 
 else {%>
-   <h1>Poll creator <%= creator[0].username %></h1>
-   <h1><%= poll[0].name %></h1>
-   <form action="/vote" method="post">
-   <% poll.forEach(option => { %> 
-      <label><%= option.option_text %>
-         <input type="radio" name="radio" value="<%= option.id %>">
-         <span class="checkox"></span>
-      </label>
-   <% }); %>
-   <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
-   <input type="submit">
-   </form>
+   <div class="poll-not-voted">
+      <h2 id="poll-name"><%= poll[0].name %></h2>
+      <form action="/vote" method="post">
+      <% poll.forEach(option => { %> 
+         <label class="radio-btn">
+            <input type="radio" name="radio" value="<%= option.id %>">
+            <div class="outside"><div class="inside"></div></div>
+            <span class="checkbox"></span>
+            <h3><%= option.option_text %></h3>
+         </label>
+      <% }); %>
+         <input type="hidden" name="pollId" value="<%= poll[0].poll_id %>">
+         <div class="submit"><input type="submit"></div>
+      </form>
+   </div>
+   
 <% } %>
+
+<div id="creator-info">
+      <h4>Creator username</h4>
+      <a href="/profile/<%= creator[0].id %>" target="_blank"><h3><%= creator[0].username %></h3></a>
+      <h4>Creator id</h4>
+      <h3><%= creator[0].id %></h3>
+      <h4>Poll id</h4>
+      <h3><%= poll[0].poll_id %></h3>
+    </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
    const option1 =  document.getElementById('option1').value;

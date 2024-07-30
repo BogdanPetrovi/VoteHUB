@@ -1,53 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoteHUB</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="/styles/style.css">
-    <link rel="stylesheet" href="/styles/newpoll.css">
-  </head>
-<body>
-  <header>
-    <a href="/">
-      <div class="logo">
-      <svg width="64px" height="64px" viewBox="-6.4 -6.4 76.80 76.80" xmlns="http://www.w3.org/2000/svg" fill="none" stroke="#F5F4F4" stroke-width="1.088" transform="matrix(1, 0, 0, 1, 0, 0)rotate(0)"><g id="SVGRepo_bgCarrier" stroke-width="0"></g><g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="0.256"></g><g id="SVGRepo_iconCarrier"><polyline points="16 40 8 40 8 56 56 56 56 40 48 40"></polyline><polyline points="52 28 56 32 40 48"></polyline><polyline points="24 48 8 32 32 8 44 20"></polyline><line x1="16" y1="48" x2="48" y2="48"></line><polyline points="56 16 32 40 24 32"></polyline></g></svg>
-      <h3 class="name" style="margin:0; font-style: italic;">VoteHUB</h3>
-    </div>
-    </a>
-    <div>
-      <div class="dropdown">
-        <% if(user.is_admin){ %>
-          <button type="button" class="btn btn-light" onclick="location.href='/make-poll'">Create poll</button>
-        <% } %>
-        <a class="btn btn-outline-light me-2 dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-          <%= user.username %>
-        </a>
-        <ul class="dropdown-menu">
-          <li><a class="dropdown-item" href="/profile/<%= user.id %>">My profile</a></li>
-          <form action="/logout" method="post">
-            <li><input class="dropdown-item" style="color:red; cursor: pointer;" type="submit" value="Log out"></input></li>
-          </form>
-        </ul>
-      </div>
-    </div>
-  </header>
+<%- include("partials/header.ejs") -%>
 
-  <form action="/make-poll" method="post" class="create">
+  <form action="/make-poll" method="post" id="create">
     <h1>Create poll</h1>
-    <input type="text" placeholder="Enter poll name" name="name" oninvalid="this.setCustomValidity(`Poll name field can't be empty!`)" oninput="setCustomValidity('')" required>
-    <input type="text" placeholder="Enter first poll option" name="option1" oninvalid="this.setCustomValidity(`Option field can't be empty!`)" oninput="setCustomValidity('')" required>
-    <input type="text" placeholder="Enter second poll option" name="option2" oninvalid="this.setCustomValidity(`Option field can't be empty!`)" oninput="setCustomValidity('')" required>
-    <input type="submit">
+    <input type="text" minlength="6" maxlength="72" placeholder="Enter poll name" name="name" oninvalid="this.setCustomValidity(`Poll name field need from 6 to 72 letters!`)" oninput="setCustomValidity('')" autocomplete="off" required>
+    <div class="options">
+      <input type="text" minlength="2" maxlength="16" placeholder="Enter first poll option" name="option1" oninvalid="this.setCustomValidity(`Option field need from 2 to 16 letters!`)" oninput="setCustomValidity('')" autocomplete="off" required>
+      <input type="text" minlength="2" maxlength="16" placeholder="Enter second poll option" name="option2" oninvalid="this.setCustomValidity(`Option field need from 2 to 16 letters!`)" oninput="setCustomValidity('')" autocomplete="off" required>
+    </div>
+    <div class="submit"><input type="submit"></div>
   </form>
   
-
-
-
-
-
 <%- include('partials/footer.ejs'); -%>

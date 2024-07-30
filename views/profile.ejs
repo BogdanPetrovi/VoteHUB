@@ -1,53 +1,68 @@
 <%- include("partials/header.ejs") -%>
 
 <% if(locals.profile) { %>
-    <h1><%= profile[0].username %></h1>
-    <h1><%= profile[0].email %></h1>
-    <h1><%= profile[0].is_admin %></h1>
-
-
-    <% if(locals.created){ %>
-        <button id="votes">Votes</button>
-        <button id="created">Created polls</button>
-    <% } %>
-
-
-    <div id="polls">
-        <% if(locals.polls){ 
-            polls.forEach(poll => { %>
-                <div class="poll">
-                    <h3><%= poll.name %></h3>
-                    <h3><%= poll.option_text %></h3>
-                    <a href="/poll/<%= poll.poll_id %>"><h3>See more</h3></a>
-                </div>
-        <%  });
-        } else { %>
-            <h1>still no votes</h1>
-        <% } %>
-    </div>
-
-    <% if(locals.created){ %>
-        <div id="createdPolls" class="hidden">
-        <% created.forEach(poll => { %>
-            <div class="poll">
-                <h3><%= poll.name %></h3>
-                <a href="/poll/<%= poll.id %>"><h3>See more</h3></a>
-            </div>
-        <% }); %>
+    <div id="profile-page">
+        <div id="profile-info">
+            <h5>Username</h5>
+            <h4><%= profile[0].username %></h4>
+            <h5>E-mail</h5>
+            <h4><%= profile[0].email %></h4>
+            <% if(profile[0].is_admin) {%>
+            <h4>Admin user</h4>
+            <% } %>
         </div>
+        <div id="profile-polls">
+            <% if(locals.created){ %>
+                <div id="profile-buttons">
+                    <button id="votes">Recent votes</button>
+                    <button id="created">Created polls</button>
+                </div>
+            <% } %>
 
+            <div id="polls">
+                <% if(locals.polls){ %>
+                    <div id="profile-description">
+                        <h5>Recently voted</h5>
+                        <h5>Vote option</h5>
+                    </div>
+                   <% polls.forEach(poll => { %>
+                        <div class="profile-poll">
+                            <h3 class="profile-poll-name"><%= poll.name %></h3>
+                            <h3 class="profile-poll-option"><%= poll.option_text %></h3>
+                        </div>
+                        <a href="/poll/<%= poll.poll_id %>" class="seemorelink"><h4 class="seemore">See more >>></h4></a>
+                <%  });
+                } else { %>
+                    <h3>User still haven't voted</h3>
+                <% } %>
+            </div>
+
+            <% if(locals.created){ %>
+                <div id="created-polls" class="hidden">
+                    <h5>Created polls</h5>
+                <% created.forEach(poll => { %>
+                    <div class="created-poll">
+                        <h3><%= poll.name %></h3>
+                        <a href="/poll/<%= poll.id %>"><h4 class="seemore">See more>>></h4></a>
+                    </div>
+                <% }); %>
+                </div>
         <script>
             document.getElementById('votes').onclick = function() {
-                document.getElementById('createdPolls').setAttribute('class', 'hidden');
                 document.getElementById('polls').removeAttribute('class', 'hidden');
+                document.getElementById('created-polls').setAttribute('class', 'hidden');  
             };   
             document.getElementById('created').onclick = function() {
                 document.getElementById('polls').setAttribute('class', 'hidden');
-                document.getElementById('createdPolls').removeAttribute('class', 'hidden');
+                document.getElementById('created-polls').removeAttribute('class', 'hidden');
             };  
-            
         </script>
-<% }} else { %>
-<h1><%= error %></h1>
+<% }%> 
+        </div>
+    </div>
+
+<%} else { %>
+<h3><%= error %></h3>
 <% } %>
+
 <%- include("partials/footer.ejs") -%>

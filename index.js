@@ -35,6 +35,7 @@ const db = new pg.Client({
 db.connect();
 
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(express.json());
 app.use(express.static("public"));
 
 app.get("/", (req, res) => {
@@ -72,11 +73,16 @@ app.get("/register", (req, res) => {
 app.get("/home", async (req, res) => {
     console.log(req.user);
     const user = req.user;
+    const queryText = req.query;
     if(req.isAuthenticated()){
         const polls = await db.query("SELECT * FROM users JOIN polls ON polls.creator_id = users.id ORDER BY polls.id DESC");
         const options = await db.query("SELECT * FROM options");
         const votes = await db.query("SELECT * FROM votes WHERE user_id = $1", [user.id]);
-        res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: votes.rows});
+        if(queryText.vote){
+            res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: votes.rows,vote: queryText});
+        } else {
+            res.render("index.ejs", {user: user, polls: polls.rows, options: options.rows, votes: votes.rows});
+        }
     } else {
         res.redirect("/login");
     }
@@ -138,6 +144,8 @@ app.get("/profile/:id", async (req, res) => {
                         console.log(error);
                         res.redirect("/home");
                     }
+                } else {
+                    res.render("profile.ejs", {user:user, profile: profile.rows});
                 }
             } else {
                 res.render("profile.ejs", {user: user, error: "Profile not found"});
@@ -216,7 +224,7 @@ app.post("/make-poll", async (req,res) => {
             }
         } catch(error) {
             console.log(error);
-            res.render("newpoll.ejs", {user: user, error: "Poll with same name already exists! Try another name!"})
+            res.status(400).json({message:"Poll with this name already exists!"});
         }
         }
     else{
@@ -231,14 +239,15 @@ app.post("/vote", async (req, res) => {
     const user = req.user;
     try {
         const result = await db.query("INSERT INTO votes (poll_id, option_id, user_id) VALUES($1, $2, $3);", [pollId, optionId, user.id]);
-        res.redirect(`/poll/${pollId}`);
+        const result1 = await db.query("SELECT option_text FROM options WHERE id=$1;",[optionId]);
+        res.redirect(`/home?vote=You succesfully voted for:&option=${result1.rows[0].option_text}&pollid=${pollId}`);
     } catch (error) {
         if(error.constraint == 'unique_poll_user'){
             console.log("User already voted on this poll");
-            res.redirect("/home");
+            res.redirect("/home?vote=You already voted on this poll");
         } else {
             console.log(error);
-            res.redirect("/home");
+            res.redirect("/home?vote=Please select one of the options before clicking submit!");
         }
     }
 });
